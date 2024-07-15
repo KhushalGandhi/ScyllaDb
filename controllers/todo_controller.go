@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"github.com/gocql/gocql"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"scylladb/models"
 	"scylladb/services"
 )
@@ -15,10 +16,13 @@ type TODOController struct {
 func (c *TODOController) CreateTODO(ctx *fiber.Ctx) error {
 	todo := new(models.TODO)
 	if err := ctx.BodyParser(todo); err != nil {
+		log.Error(err)
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse JSON"})
 	}
 
 	if err := c.Service.Create(todo); err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot create TODO item"})
 	}
 
@@ -28,6 +32,8 @@ func (c *TODOController) CreateTODO(ctx *fiber.Ctx) error {
 func (c *TODOController) GetTODO(ctx *fiber.Ctx) error {
 	userID, err := gocql.ParseUUID(ctx.Params("user_id"))
 	if err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user ID"})
 	}
 
@@ -47,6 +53,7 @@ func (c *TODOController) GetTODO(ctx *fiber.Ctx) error {
 func (c *TODOController) ListTODOs(ctx *fiber.Ctx) error {
 	userID, err := gocql.ParseUUID(ctx.Params("user_id"))
 	if err != nil {
+		log.Error(err)
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user ID"})
 	}
 
@@ -58,12 +65,16 @@ func (c *TODOController) ListTODOs(ctx *fiber.Ctx) error {
 	if ctx.Query("page_state") != "" {
 		pageState, err = base64.StdEncoding.DecodeString(ctx.Query("page_state"))
 		if err != nil {
+			log.Error(err)
+
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid page state"})
 		}
 	}
 
 	todos, newPageState, err := c.Service.List(userID, status, limit, pageState, sortBy)
 	if err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot list TODO items"})
 	}
 
@@ -76,16 +87,22 @@ func (c *TODOController) ListTODOs(ctx *fiber.Ctx) error {
 func (c *TODOController) UpdateTODO(ctx *fiber.Ctx) error {
 	userID, err := gocql.ParseUUID(ctx.Params("user_id"))
 	if err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user ID"})
 	}
 
 	id, err := gocql.ParseUUID(ctx.Params("id"))
 	if err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ID"})
 	}
 
 	todo := new(models.TODO)
 	if err := ctx.BodyParser(todo); err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse JSON"})
 	}
 
@@ -93,6 +110,8 @@ func (c *TODOController) UpdateTODO(ctx *fiber.Ctx) error {
 	todo.UserID = userID
 
 	if err := c.Service.Update(todo); err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot update TODO item"})
 	}
 
