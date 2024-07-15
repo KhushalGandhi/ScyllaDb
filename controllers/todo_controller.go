@@ -39,11 +39,15 @@ func (c *TODOController) GetTODO(ctx *fiber.Ctx) error {
 
 	id, err := gocql.ParseUUID(ctx.Params("id"))
 	if err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ID"})
 	}
 
 	todo, err := c.Service.GetByID(userID, id)
 	if err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot get TODO item"})
 	}
 
@@ -121,15 +125,21 @@ func (c *TODOController) UpdateTODO(ctx *fiber.Ctx) error {
 func (c *TODOController) DeleteTODO(ctx *fiber.Ctx) error {
 	userID, err := gocql.ParseUUID(ctx.Params("user_id"))
 	if err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user ID"})
 	}
 
 	id, err := gocql.ParseUUID(ctx.Params("id"))
 	if err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ID"})
 	}
 
 	if err := c.Service.Delete(userID, id); err != nil {
+		log.Error(err)
+
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot delete TODO item"})
 	}
 
